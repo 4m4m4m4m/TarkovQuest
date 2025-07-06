@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, request, url_for
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func
+from sqlalchemy import func, desc, Select
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 TQ = Flask(__name__)
 bcrypt = Bcrypt(TQ)
-TQ.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+TQ.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database1.db'
 TQ.config['SECRET_KEY'] = '794561230waeds'
 
 login_manager = LoginManager()
@@ -29,12 +29,14 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), nullable=False, unique=True)
     password = db.Column(db.String(80), nullable=False)
+    completed = db.Column(db.Integer, default=0)
 
 class Quest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), nullable=False)
     text = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, nullable=False)
+    completed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 class Regform(FlaskForm):
@@ -49,7 +51,7 @@ class Regform(FlaskForm):
             raise ValidationError("That username alredy in use")
 
 class Logform(FlaskForm):
-    username = StringField ( validators=[InputRequired(), Length(min = 4, max = 20)], render_kw = {"placeholder": "Username"})
+    username = StringField ( validators=[InputRequired(), Length(min = 1, max = 20)], render_kw = {"placeholder": "Username"})
     password = PasswordField ( validators=[InputRequired(), Length(min = 4, max = 20)], render_kw = {"placeholder": "Password"})
     submit = SubmitField("Login")
 
@@ -92,11 +94,30 @@ def register():
             return "This username alredy in use"
     return render_template("register.html", form = form)
 
-@TQ.route('/history')
+@TQ.route('/history', methods=['GET', 'POST'])
 @login_required
 def history():
-    user_quests = Quest.query.filter_by(user_id=current_user.id).order_by(Quest.created_at.desc()).all()
-    return render_template('history.html', quests=user_quests)
+    show_completed = request.args.get('show_completed', 'all')
+    base_query = Quest.query.filter_by(user_id=current_user.id).order_by(desc(Quest.created_at))
+    if show_completed == 'completed':
+        quests = base_query.filter_by(completed = True)
+    elif show_completed == 'uncompleted':
+        quests = base_query.filter_by(completed = False)
+    else:
+        quests = base_query
+    return render_template('history.html', quests=quests, show_completed=show_completed) 
+
+@TQ.route('/history/<int:quest_id>')
+@login_required
+def completion(quest_id):
+    completion = request.args.get('completed')
+    if completion:
+        quest = Quest.query.get(quest_id)
+        user = User.query.get(current_user.id)
+        quest.completed = True
+        user.completed += 1
+        db.session.commit()
+        return redirect(url_for('history'))
 
 @TQ.route('/logout', methods=['GET', 'POST'])
 @login_required
@@ -107,17 +128,17 @@ def logout():
 @TQ.route('/generate', methods=['GET', 'POST'])
 @login_required
 def generate():
-    max_attempts = 20
-    for _ in range(max_attempts):        
-        name, text = generate_random_quest()
-        quest = Quest(name=name, text=text,user_id=current_user.id)
-        if not dup_check(text):
-            db.session.add(quest)
-            db.session.commit()
-            return render_template('generate.html', name=name, text=text)
-    return "Error"
+    name, text = generate_random_quest()
+    quest = Quest(name=name, text=text,user_id=current_user.id)
+    db.session.add(quest)
+    db.session.commit()
+    return render_template('generate.html', name=name, text=text)
 
-        
+@TQ.route('/top')
+def top():
+    top = db.session.scalars(db.select(User).order_by(desc(User.completed))).all()
+    print(top)
+    return render_template('top.html', top=top)
 
 if __name__ == "__main__":
     with TQ.app_context():

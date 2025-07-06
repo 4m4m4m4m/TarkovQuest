@@ -5,20 +5,34 @@
 {% endblock %}
 
 {% block body %}
+    <div class="container" style="margin-bottom: 25px;">
+        <h1>My quests</h1>
+        <div class="filter-buttons">
+            <a href="history?show_completed=all" class="btn {% if show_completed == 'all' %}btn-primary{% else %}btn-secondary{% endif %}">Все квесты</a>
+            <a href="history?show_completed=completed" class="btn {% if show_completed == 'completed' %}btn-primary{% else %}btn-secondary{% endif %}">Выполненные</a>
+            <a href="history?show_completed=uncompleted" class="btn {% if show_completed == 'uncompleted' %}btn-primary{% else %}btn-secondary{% endif %}">Невыполненные</a>
+        </div>
+    </div>
     {% if quests %}
-    <ul class="quest-list">
+        <div class="container">
         {% for quest in quests %}   
             <div class="container">
-                <div class="alert alert-info">
+                <div class="{% if quest.completed %}alert alert-success{% else %}alert alert-danger{% endif %}">
                     <h3>{{ quest.name }}</h3>
                     <p>{{ quest.text }}</p>
                     <small>Создан: {{ quest.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                    {% if not quest.completed %}
+                    <a href="/history/{{quest.id}}?completed=True" class="btn btn-success">Выполнить</a>
+                    {% endif %}
                 </div>
             </div>
         {% endfor %}
-    </ul>
-{% else %}
-    <p>Вы ещё не сгенерировали ни одного квеста.</p>
-{% endif %}
+        </div>
+    {% else %}
+        <div class="container">
+            <div class="alert alert-primary"></div>
+            <h2>Вы ещё не сгенерировали ни одного квеста</h2>
+        </div>
+    {% endif %}
     
 {% endblock %}

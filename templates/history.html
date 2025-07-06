@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    History
+{% endblock %}
+
+{% block body %}
+    {% if quests %}
+    <ul class="quest-list">
+        {% for quest in quests %}   
+            <div class="container">
+                <div class="alert alert-info">
+                    <h3>{{ quest.name }}</h3>
+                    <p>{{ quest.text }}</p>
+                    <small>Создан: {{ quest.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                </div>
+            </div>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>Вы ещё не сгенерировали ни одного квеста.</p>
+{% endif %}
+    
+{% endblock %}

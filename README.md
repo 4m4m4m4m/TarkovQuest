@@ -1,2 +1,2 @@
 # TarkovQuest
-New site that generates quests for Tarkov
+Site that generates quests for Tarkov

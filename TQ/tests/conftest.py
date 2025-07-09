@@ -1,17 +1,29 @@
+import sys
+from pathlib import Path
 import pytest
-import TQ as tq
 
-@pytest.fixture
-def TQ():
-    tq.config.update({
+sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
+from TQ import TQ
+
+@pytest.fixture()
+def app():
+    app = TQ
+    app.config.update({
         "TESTING": True,
     })
-    yield tq
+    
 
-@pytest.fixture
-def client(TQ):
-    return TQ.test_client()
+    # other setup can go here
 
-@pytest.fixture
-def runner(TQ):
-    return TQ.test_cli_runner()
+    yield app
+
+    # clean up / reset resources here
+
+@pytest.fixture()
+def client(app):
+    return app.test_client()
+
+
+@pytest.fixture()
+def runner(app):
+    return app.test_cli_runner()

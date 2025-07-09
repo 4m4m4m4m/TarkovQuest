@@ -17,3 +17,7 @@ def test_request_register(client):
 def test_request_account_unauthorized(client):
     response = client.get("/account")
     assert response.status_code == 302
+
+def test_request_account_authorized(authenticated_client):
+    response = authenticated_client.get("/account")
+    assert response.status_code == 200

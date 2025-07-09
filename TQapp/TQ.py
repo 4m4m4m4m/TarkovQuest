@@ -6,7 +6,7 @@ from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField
 from wtforms.validators import InputRequired, Length, ValidationError
-from gen import *
+from TQapp.gen import gen
 from datetime import datetime, timezone
 
 TQ = Flask(__name__)
@@ -128,7 +128,7 @@ def logout():
 @TQ.route('/generate', methods=['GET', 'POST'])
 @login_required
 def generate():
-    name, text = generate_random_quest()
+    name, text = gen.generate_random_quest()
     quest = Quest(name=name, text=text,user_id=current_user.id)
     db.session.add(quest)
     db.session.commit()

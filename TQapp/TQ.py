@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, request, url_for, Response
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func, desc, Select
+from sqlalchemy import desc, Select
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm

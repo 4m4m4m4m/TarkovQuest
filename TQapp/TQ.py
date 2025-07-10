@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, url_for
+from flask import Flask, render_template, redirect, request, url_for, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, desc, Select
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
@@ -8,11 +8,12 @@ from wtforms import StringField, SubmitField, PasswordField
 from wtforms.validators import InputRequired, Length, ValidationError
 from TQapp.gen import gen
 from datetime import datetime, timezone
+from TQapp.config import Config
 
 TQ = Flask(__name__)
 bcrypt = Bcrypt(TQ)
-TQ.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database1.db'
-TQ.config['SECRET_KEY'] = '794561230waeds'
+TQ.config.from_object(Config)
+TQ.response_class = Response
 
 login_manager = LoginManager()
 login_manager.init_app(TQ)
@@ -23,7 +24,6 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 db = SQLAlchemy(TQ)
-
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
